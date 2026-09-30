@@ -257,7 +257,7 @@
       </div>
       <div class="error" id="r-error"></div>
       <button class="primary" id="r-add">Enviar pedido de reserva</button>
-      <div class="success" id="r-success">Uma nova aba deveria ter aberto com o Google Forms preenchido. Se não abriu, <a href="#" id="link-fallback-form" target="_blank" rel="noopener" style="color:var(--ok); font-weight:600;">clique aqui</a> para abrir manualmente — e clique em "Enviar" lá para confirmar sua reserva de verdade.</div>
+      <div class="success" id="r-success">Reserva enviada! Ela já aparece na lista abaixo. Se não aparecer em alguns minutos, <a href="#" id="link-fallback-form" target="_blank" rel="noopener" style="color:var(--ok); font-weight:600;">clique aqui</a> para confirmar manualmente (nesse caso, você vai precisar assinar de novo por lá).</div>
     </div>
 
     <div class="panel">
@@ -338,9 +338,11 @@
 
 </div>
 
+<iframe name="hidden-submit-frame" style="display:none;"></iframe>
 
 <script>
 const FORM_VIEW_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSej7NWgsVvK6vwRjGs6dtGnPtMeWVsnsNrfEzcKcld2jk6AyA/viewform';
+const FORM_ACTION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSej7NWgsVvK6vwRjGs6dtGnPtMeWVsnsNrfEzcKcld2jk6AyA/formResponse';
 const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRp0sj9C-wWmzVZ7HgifvgkPup1Tixr5tVT0D9aL9WaX_jxKTeZMoBhEGKDPCpE_XLaLdR7Us3yxcGV/pub?output=csv';
 
 const ENTRY = {
@@ -379,24 +381,32 @@ function hojeISO(){
   return d.getFullYear() + '-' + mes + '-' + dia;
 }
 
-// ---- Envio: abre o Google Forms real numa aba nova, já preenchido ----
-// (o envio "escondido" se mostrou pouco confiável — o Google pode recusar sem avisar)
+// ---- Envio: POST de verdade (necessário porque a assinatura é um texto grande, ---
+// que não cabe num link comum) ----
 function enviarParaGoogleForm(dados){
-  const params = Object.keys(dados)
-    .map(campo => ENTRY[campo] + '=' + encodeURIComponent(dados[campo]))
+  const form = document.createElement('form');
+  form.action = FORM_ACTION_URL;
+  form.method = 'POST';
+  form.target = 'hidden-submit-frame';
+  Object.keys(dados).forEach(campo => {
+    const input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = ENTRY[campo];
+    input.value = dados[campo];
+    form.appendChild(input);
+  });
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+
+  // Link de backup (manual), só com os campos curtos — a assinatura fica de fora
+  // porque sozinha já é grande demais para caber num link.
+  const dadosCurtos = { ...dados };
+  delete dadosCurtos.assinatura;
+  const params = Object.keys(dadosCurtos)
+    .map(campo => ENTRY[campo] + '=' + encodeURIComponent(dadosCurtos[campo]))
     .join('&');
-  const url = FORM_VIEW_URL + '?usp=pp_url&' + params;
-
-  // Tenta simular um clique real num link (mais respeitado pelo navegador que window.open)
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-
-  return url;
+  return FORM_VIEW_URL + '?usp=pp_url&' + params;
 }
 
 // ---- Leitura (CSV publicado) ----
