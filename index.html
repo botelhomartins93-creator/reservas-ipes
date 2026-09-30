@@ -2,6 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <title>Aplicativo Reserva Condomínio dos Ipês</title>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
@@ -131,23 +132,33 @@
   .cal-nav{display:flex; align-items:center; gap:8px;}
   .cal-nav span{font-size:13.5px; color:var(--ink-soft); min-width:100px; text-align:center;}
 
-  @media (max-width: 480px){
-    .wrap{padding:20px 16px 60px;}
+  @media (max-width: 600px){
+    .wrap{padding:16px 14px 60px;}
     header.top{gap:10px;}
     header.top .left{gap:10px;}
-    h1{font-size:19px;}
-    .subtitle{font-size:12.5px;}
-    .panel{padding:16px 16px;}
+    header.top svg{width:32px;height:32px;flex-shrink:0;}
+    h1{font-size:18px;}
+    .subtitle{font-size:12px;}
+    .panel{padding:14px 14px;}
     .panel h2{font-size:15px;}
-    .grid{grid-template-columns:1fr;}
+    .grid{grid-template-columns:1fr;gap:14px;}
+    .field{margin-bottom:14px;}
+    label{font-size:13px;margin-bottom:6px;}
+    input,select{
+      font-size:16px;padding:12px 10px;border-radius:8px;
+    }
     .stats{grid-template-columns:1fr;}
     .cal-grid{max-width:100%;}
+    .cal-day{height:40px;font-size:14px;}
     .cal-header{gap:6px;}
-    .cal-nav span{min-width:auto;font-size:12.5px;}
-    button.primary{width:100%;}
+    .cal-nav span{min-width:auto;font-size:13px;}
+    .cal-nav button.ghost{padding:8px 14px;font-size:16px;}
+    button.primary{width:100%;padding:13px 18px;font-size:15px;}
+    button.ghost{padding:9px 14px;}
     .admin-bar{flex-direction:column; align-items:flex-start; gap:8px;}
     table{font-size:12px;}
     th,td{padding:6px 4px;}
+    #r-assinatura-canvas{max-width:100%;}
   }
 </style>
 </head>
@@ -208,15 +219,31 @@
           </select>
         </div>
       </div>
+      <div class="error" id="r-aviso-conflito" style="display:none; background:var(--danger-bg); border-radius:4px; padding:10px 12px; margin-top:-6px; margin-bottom:12px;"></div>
       <div class="note" id="r-nota-taxa" style="display:none; margin-top: -4px;">
-        O uso da Churrasqueira e Salão tem taxa de reserva de <strong>R$ 145,50</strong> (15% da taxa condominial). O pagamento deverá ser realizado diretamente na conta do condomínio e o comprovante encaminhado para administrador Caldas.
-        <div style="margin-top:8px; font-size:12.5px;">
-          <strong>Chave PIX:</strong> <span id="pix-chave">[a definir]</span>
+        <div style="font-size:12px; line-height:1.55;">
+          <p style="margin:0 0 8px;">Na qualidade de morador (a) do Condomínio dos Ipês, situado na Rua Minas Gerais, 814, bairro: Três Poderes, Imperatriz-MA.</p>
+          <p style="margin:0 0 8px;">Sirvo-me da presente para requisitar para meu uso privativo, o Salão de Festas do Condomínio, para a data e horário acima indicado, pelo que, e na melhor forma de direito, comprometo-me e responsabilizo-me pelo seguinte:</p>
+          <p style="margin:0 0 6px;">1. Pagar taxa de uso do Salão de Festas, equivalente a 15% do valor da taxa de condomínio, atualmente R$ 145,50 (cento e quarenta e cinco reais e cinquenta centavos);</p>
+          <p style="margin:0 0 6px;">2. Utilizar o Salão de Festas por mim, meus familiares e convidados, de tal forma a não perturbar a boa ordem e o sossego dos demais moradores;</p>
+          <p style="margin:0 0 6px;">3. Por todo e qualquer dano (administrativa, civil e criminal, inclusive contra terceiros) sofrido pelo mobiliário, adornos, aparelhos, cortinas, tapetes e demais objetos que guarnecem o referido salão, durante o período de sua utilização;</p>
+          <p style="margin:0;">4. A cumprir os dispostos na Convenção e no Regulamento Interno de uso da área de lazer, sobre os quais tenho total conhecimento.</p>
+        </div>
+        <div style="margin-top:8px; font-size:12.5px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+          <span><strong>Chave PIX:</strong> <span id="pix-chave">08.174.877/0001-00</span> (CNPJ)</span>
+          <button type="button" class="ghost" id="btn-copiar-pix" style="padding:4px 10px; font-size:11.5px;">Copiar PIX</button>
         </div>
         <label style="display:flex; align-items:flex-start; gap:8px; margin-top:10px; font-size:13px; color:var(--ink); cursor:pointer;">
           <input type="checkbox" id="r-aceite-taxa" style="width:auto; margin-top:2px;">
           <span>Estou de acordo com os termos de uso do local e com a taxa de reserva.</span>
         </label>
+        <div style="margin-top:12px;">
+          <label style="margin-bottom:4px;">Rubrica (assine com o dedo ou mouse)</label>
+          <canvas id="r-assinatura-canvas" width="300" height="100" style="border:1px solid var(--line); border-radius:6px; background:#fff; width:100%; max-width:300px; touch-action:none; cursor:crosshair;"></canvas>
+          <div style="margin-top:6px;">
+            <button type="button" class="ghost" id="btn-limpar-assinatura">Limpar assinatura</button>
+          </div>
+        </div>
       </div>
       <div class="grid" style="margin-top: 12px;">
         <div class="field">
@@ -324,7 +351,8 @@ const ENTRY = {
   espaco: 'entry.1096931243',
   horario: 'entry.1304627455',
   observacao: 'entry.462708229',
-  aceite: 'entry.1277447217'
+  aceite: 'entry.1277447217',
+  assinatura: 'entry.1021017291'
 };
 
 const ADMIN_SENHA = '2026';
@@ -627,7 +655,95 @@ async function notificarSindico(reserva){
 document.getElementById('r-espaco').addEventListener('change', () => {
   const nota = document.getElementById('r-nota-taxa');
   nota.style.display = (document.getElementById('r-espaco').value === 'Churrasqueira e Salão') ? 'block' : 'none';
+  verificarConflitoAoVivo();
 });
+
+// ---- Assinatura (rubrica) ----
+const assinaturaCanvas = document.getElementById('r-assinatura-canvas');
+const assinaturaCtx = assinaturaCanvas.getContext('2d');
+let assinando = false;
+let assinaturaTemConteudo = false;
+assinaturaCtx.strokeStyle = '#152c1f';
+assinaturaCtx.lineWidth = 2;
+assinaturaCtx.lineCap = 'round';
+
+function posCanvas(e){
+  const rect = assinaturaCanvas.getBoundingClientRect();
+  const escalaX = assinaturaCanvas.width / rect.width;
+  const escalaY = assinaturaCanvas.height / rect.height;
+  const cx = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
+  const cy = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
+  return { x: cx * escalaX, y: cy * escalaY };
+}
+function iniciarTraco(e){
+  e.preventDefault();
+  assinando = true;
+  const p = posCanvas(e);
+  assinaturaCtx.beginPath();
+  assinaturaCtx.moveTo(p.x, p.y);
+}
+function desenharTraco(e){
+  if(!assinando) return;
+  e.preventDefault();
+  const p = posCanvas(e);
+  assinaturaCtx.lineTo(p.x, p.y);
+  assinaturaCtx.stroke();
+  assinaturaTemConteudo = true;
+}
+function pararTraco(){ assinando = false; }
+
+assinaturaCanvas.addEventListener('mousedown', iniciarTraco);
+assinaturaCanvas.addEventListener('mousemove', desenharTraco);
+window.addEventListener('mouseup', pararTraco);
+assinaturaCanvas.addEventListener('touchstart', iniciarTraco);
+assinaturaCanvas.addEventListener('touchmove', desenharTraco);
+assinaturaCanvas.addEventListener('touchend', pararTraco);
+
+document.getElementById('btn-limpar-assinatura').addEventListener('click', () => {
+  assinaturaCtx.clearRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+  assinaturaTemConteudo = false;
+});
+
+document.getElementById('btn-copiar-pix').addEventListener('click', async () => {
+  const chave = document.getElementById('pix-chave').textContent.trim();
+  const btn = document.getElementById('btn-copiar-pix');
+  try{
+    await navigator.clipboard.writeText(chave);
+  }catch(e){
+    try{
+      const temp = document.createElement('textarea');
+      temp.value = chave;
+      temp.style.position = 'fixed';
+      temp.style.opacity = '0';
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+    }catch(e2){}
+  }
+  const textoOriginal = btn.textContent;
+  btn.textContent = 'Copiado! ✓';
+  setTimeout(() => { btn.textContent = textoOriginal; }, 2000);
+});
+
+function verificarConflitoAoVivo(){
+  const data = document.getElementById('r-data').value;
+  const espaco = document.getElementById('r-espaco').value;
+  const aviso = document.getElementById('r-aviso-conflito');
+  if(!data){
+    aviso.style.display = 'none';
+    return;
+  }
+  const conflito = reservas.some(r => r.status !== 'Cancelado' && r.data === data && r.espaco === espaco);
+  if(conflito){
+    aviso.textContent = '⚠️ Essa data já está reservada para ' + espaco + '. Escolha outra data ou outro espaço.';
+    aviso.style.display = 'block';
+  }else{
+    aviso.style.display = 'none';
+  }
+}
+document.getElementById('r-data').addEventListener('change', verificarConflitoAoVivo);
+document.getElementById('r-data').addEventListener('input', verificarConflitoAoVivo);
 
 document.getElementById('r-add').addEventListener('click', async () => {
   const morador = document.getElementById('r-morador').value.trim();
@@ -651,6 +767,11 @@ document.getElementById('r-add').addEventListener('click', async () => {
     errorEl.style.display = 'block';
     return;
   }
+  if(espaco === 'Churrasqueira e Salão' && !assinaturaTemConteudo){
+    errorEl.textContent = 'Assine no campo de rubrica para confirmar sua reserva.';
+    errorEl.style.display = 'block';
+    return;
+  }
   const conflito = reservas.some(r => r.status !== 'Cancelado' && r.data === data && r.espaco === espaco);
   if(conflito){
     errorEl.textContent = 'Essa data já está reservada para ' + espaco + '. Escolha outra data ou outro espaço.';
@@ -658,6 +779,10 @@ document.getElementById('r-add').addEventListener('click', async () => {
     return;
   }
   errorEl.style.display = 'none';
+
+  const assinaturaBase64 = (espaco === 'Churrasqueira e Salão' && assinaturaTemConteudo)
+    ? assinaturaCanvas.toDataURL('image/png')
+    : '';
 
   const novaReserva = {
     morador, email, casa, data, espaco,
@@ -673,13 +798,16 @@ document.getElementById('r-add').addEventListener('click', async () => {
     espaco: novaReserva.espaco,
     horario: novaReserva.horario,
     observacao: novaReserva.observacao,
-    aceite: novaReserva.aceite
+    aceite: novaReserva.aceite,
+    assinatura: assinaturaBase64
   });
   document.getElementById('link-fallback-form').href = urlFormulario;
 
   notificarSindico({ morador, casa, data, espaco });
   enviarConfirmacaoEmail({ morador, email, casa, data, espaco, horario: inicio });
 
+  assinaturaCtx.clearRect(0, 0, assinaturaCanvas.width, assinaturaCanvas.height);
+  assinaturaTemConteudo = false;
   document.getElementById('r-morador').value = '';
   document.getElementById('r-email').value = '';
   document.getElementById('r-casa').value = '';
@@ -687,6 +815,7 @@ document.getElementById('r-add').addEventListener('click', async () => {
   document.getElementById('r-inicio').value = '';
   document.getElementById('r-obs').value = '';
   document.getElementById('r-aceite-taxa').checked = false;
+  document.getElementById('r-aviso-conflito').style.display = 'none';
   successEl.style.display = 'block';
 
   // Guarda como pendente até confirmarmos que já apareceu na planilha —
