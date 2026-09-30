@@ -374,6 +374,10 @@ function escapeHtml(s){
 function valorTaxa(espaco){
   return espaco === 'Churrasqueira e Salão' ? 145.50 : 0;
 }
+function ehPago(valor){
+  const v = String(valor || '').trim().toLowerCase();
+  return v === 'sim' || v === 'true' || v === 'ok' || v === 'pago' || v === 'x' || v === '1';
+}
 function hojeISO(){
   const d = new Date();
   const mes = String(d.getMonth() + 1).padStart(2, '0');
@@ -475,7 +479,7 @@ async function carregarReservas(){
         observacao: (l[idx['observacao']] || '').trim(),
         aceiteTaxa: (l[idx['aceite taxa']] || '').trim(),
         status: idx['status'] !== undefined ? ((l[idx['status']] || '').trim() || 'Aprovado') : 'Aprovado',
-        taxaPaga: idx['taxa paga'] !== undefined ? ((l[idx['taxa paga']] || '').trim() || 'Não') : 'Não',
+        taxaPaga: idx['taxa paga'] !== undefined ? (l[idx['taxa paga']] || '').trim() : '',
         valorTaxa: valorTaxa(espaco)
       };
     }).filter(r => r.data);
@@ -553,7 +557,7 @@ function renderFinanceiro(){
 
   let recebido = 0, pendente = 0;
   cobrancas.forEach(r => {
-    if(r.taxaPaga === 'Sim') recebido += r.valorTaxa;
+    if(ehPago(r.taxaPaga)) recebido += r.valorTaxa;
     else pendente += r.valorTaxa;
   });
   document.getElementById('f-total-recebido').textContent = fmtMoney(recebido);
@@ -573,7 +577,7 @@ function renderFinanceiro(){
     html += '<td>' + escapeHtml(r.casa || '—') + '</td>';
     html += '<td>' + escapeHtml(r.morador) + '</td>';
     html += '<td class="rowend">' + fmtMoney(r.valorTaxa) + '</td>';
-    html += '<td><span class="badge ' + (r.taxaPaga === 'Sim' ? 'aprovado' : 'pendente') + '">' + (r.taxaPaga === 'Sim' ? 'Pago' : 'Pendente') + '</span></td>';
+    html += '<td><span class="badge ' + (ehPago(r.taxaPaga) ? 'aprovado' : 'pendente') + '">' + (ehPago(r.taxaPaga) ? 'Pago' : 'Pendente') + '</span></td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
