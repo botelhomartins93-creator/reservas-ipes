@@ -748,9 +748,9 @@ function verificarConflitoAoVivo(){
     aviso.style.display = 'none';
     return;
   }
-  const conflito = reservas.some(r => r.status !== 'Cancelado' && r.data === data && r.espaco === espaco);
+  const conflito = reservas.some(r => r.status !== 'Cancelado' && r.data === data);
   if(conflito){
-    aviso.textContent = '⚠️ Essa data já está reservada para ' + espaco + '. Escolha outra data ou outro espaço.';
+    aviso.textContent = '⚠️ Essa data já está reservada (a churrasqueira é compartilhada entre as duas opções de espaço). Escolha outra data.';
     aviso.style.display = 'block';
   }else{
     aviso.style.display = 'none';
@@ -786,9 +786,9 @@ document.getElementById('r-add').addEventListener('click', async () => {
     errorEl.style.display = 'block';
     return;
   }
-  const conflito = reservas.some(r => r.status !== 'Cancelado' && r.data === data && r.espaco === espaco);
+  const conflito = reservas.some(r => r.status !== 'Cancelado' && r.data === data);
   if(conflito){
-    errorEl.textContent = 'Essa data já está reservada para ' + espaco + '. Escolha outra data ou outro espaço.';
+    errorEl.textContent = 'Essa data já está reservada (a churrasqueira é compartilhada entre as duas opções de espaço). Escolha outra data.';
     errorEl.style.display = 'block';
     return;
   }
